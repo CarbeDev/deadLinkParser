@@ -29,7 +29,7 @@ func (data AppData) hasLink(link string) bool {
 	return false
 }
 
-func (data AppData) HasUncheckedLink() bool {
+func (data AppData) HasUncheckedLink() bool { //TODO check if useful
 	for _, link := range data.FoundLinks {
 		if !link.Visited {
 			return true

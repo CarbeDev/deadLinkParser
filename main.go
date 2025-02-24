@@ -1,23 +1,24 @@
 package main
 
 import (
+	"deadLinkParser/client"
 	"deadLinkParser/data"
-	"golang.org/x/net/html"
+	"deadLinkParser/parsing"
 	"log"
 	"net/http"
 	"strings"
 )
 
-func main() {
-	url := "https://scrape-me.dreamsofcode.io/"
+var url string
 
+func main() {
+	url = "https://scrape-me.dreamsofcode.io/"
 	appData := data.InitialiseAppData(url)
 
-	links := getHrefLinks(url)
-
-	for _, link := range links {
-		data.AddLinkFound(link, &appData)
-	}
+	response := makeRequest(url)
+	log.Printf("%v", response)
+	links := parsing.GetLinksFromResponse(response)
+	saveLinks(links, &appData)
 
 	index := 0
 
@@ -27,14 +28,10 @@ func main() {
 		}
 
 		selectedLink := appData.FoundLinks[index].Link
-		if strings.HasPrefix(selectedLink, "/") {
-			fullUrl := buildUrl(selectedLink, url)
-
-			newLinks := getHrefLinks(fullUrl)
-
-			for _, link := range newLinks {
-				data.AddLinkFound(link, &appData)
-			}
+		if isInternal(selectedLink) {
+			response = makeRequest(selectedLink)
+			links := parsing.GetLinksFromResponse(response)
+			saveLinks(links, &appData)
 		}
 
 		index++
@@ -44,30 +41,29 @@ func main() {
 
 }
 
-func getHrefLinks(url string) []string {
-	resp, err := http.Get(url)
+func makeRequest(link string) *http.Response {
+	var err error
+	var resp *http.Response
+
+	if isInternal(link) {
+		resp, err = client.InternalRequest(link, url)
+	} else {
+		resp, err = client.ExternalRequest(link)
+	}
 
 	if err != nil {
 		log.Fatalf("Error requesting url '%v' : %v", url, err)
 	}
 
-	content, err := html.Parse(resp.Body)
-
-	var links []string
-
-	for element := range content.Descendants() {
-		if element.Type == html.ElementNode && element.Data == "a" {
-			for _, attribute := range element.Attr {
-				if attribute.Key == "href" {
-					links = append(links, attribute.Val)
-				}
-			}
-		}
-	}
-
-	return links
+	return resp
 }
 
-func buildUrl(link string, baseUrl string) string {
-	return baseUrl + link[1:]
+func isInternal(link string) bool {
+	return strings.HasPrefix(link, "/")
+}
+
+func saveLinks(links []string, appData *data.AppData) {
+	for _, link := range links {
+		data.AddLinkFound(link, appData)
+	}
 }
