@@ -47,3 +47,13 @@ func AddLinkFound(link string, appData *AppData) {
 		}
 	}
 }
+
+func UpdateLink(link string, data *AppData, visited bool, alive bool) {
+	for index := range data.FoundLinks {
+		if link == data.FoundLinks[index].Link {
+			data.FoundLinks[index].Alive = alive
+			data.FoundLinks[index].Visited = visited
+		}
+
+	}
+}

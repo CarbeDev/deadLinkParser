@@ -30,8 +30,7 @@ func main() {
 		selectedLink := appData.FoundLinks[index].Link
 		if isInternal(selectedLink) {
 			response = makeRequest(selectedLink)
-			links := parsing.GetLinksFromResponse(response)
-			saveLinks(links, &appData)
+			handleRequest(selectedLink, appData, response)
 		}
 
 		index++
@@ -39,6 +38,15 @@ func main() {
 		log.Print(appData)
 	}
 
+}
+
+func handleRequest(selectedLink string, appData data.AppData, response *http.Response) {
+	if response.StatusCode >= 200 && response.StatusCode < 400 {
+		data.UpdateLink(selectedLink, &appData, true, true)
+
+		links := parsing.GetLinksFromResponse(response)
+		saveLinks(links, &appData)
+	}
 }
 
 func makeRequest(link string) *http.Response {
