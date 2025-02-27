@@ -6,9 +6,8 @@ type AppData struct {
 }
 
 type FoundLink struct {
-	Link    string
-	Visited bool
-	Alive   bool
+	Link  string
+	Alive bool
 }
 
 func InitialiseAppData(baseUrl string) AppData {
@@ -29,16 +28,6 @@ func (data AppData) hasLink(link string) bool {
 	return false
 }
 
-func (data AppData) HasUncheckedLink() bool { //TODO check if useful
-	for _, link := range data.FoundLinks {
-		if !link.Visited {
-			return true
-		}
-	}
-
-	return false
-}
-
 func AddLinkFound(link string, appData *AppData) {
 	if !appData.hasLink(link) {
 		*appData = AppData{
@@ -52,7 +41,6 @@ func UpdateLink(link string, data *AppData, visited bool, alive bool) {
 	for index := range data.FoundLinks {
 		if link == data.FoundLinks[index].Link {
 			data.FoundLinks[index].Alive = alive
-			data.FoundLinks[index].Visited = visited
 		}
 
 	}

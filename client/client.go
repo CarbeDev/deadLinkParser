@@ -3,6 +3,10 @@ package client
 import "net/http"
 
 func InternalRequest(path string, baseUrl string) (*http.Response, error) {
+	if path == baseUrl {
+		return http.Get(path)
+	}
+
 	fullUrl := constructFullUrl(path, baseUrl)
 
 	return http.Get(fullUrl)

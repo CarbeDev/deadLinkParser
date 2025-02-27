@@ -25,9 +25,8 @@ func TestAppData_hasLink(t *testing.T) {
 				InitialUrl: "http://anyUrl.com",
 				FoundLinks: []FoundLink{
 					{
-						Link:    "/found",
-						Visited: false,
-						Alive:   false,
+						Link:  "/found",
+						Alive: false,
 					},
 				},
 			},
@@ -42,9 +41,8 @@ func TestAppData_hasLink(t *testing.T) {
 				InitialUrl: "http://anyUrl.com",
 				FoundLinks: []FoundLink{
 					{
-						Link:    "/found",
-						Visited: false,
-						Alive:   false,
+						Link:  "/found",
+						Alive: false,
 					},
 				},
 			},
@@ -85,23 +83,20 @@ func Test_addLinkFound(t *testing.T) {
 					InitialUrl: "http://anyUrl.com",
 					FoundLinks: []FoundLink{
 						{
-							Link:    "/found",
-							Visited: false,
-							Alive:   false,
+							Link:  "/found",
+							Alive: false,
 						},
 					},
 				},
 			},
 			want: []FoundLink{
 				{
-					Link:    "/found",
-					Visited: false,
-					Alive:   false,
+					Link:  "/found",
+					Alive: false,
 				},
 				{
-					Link:    "/new_links",
-					Visited: false,
-					Alive:   false,
+					Link:  "/new_links",
+					Alive: false,
 				},
 			},
 		},
@@ -113,18 +108,16 @@ func Test_addLinkFound(t *testing.T) {
 					InitialUrl: "http://anyUrl.com",
 					FoundLinks: []FoundLink{
 						{
-							Link:    "/already_exist",
-							Visited: true,
-							Alive:   false,
+							Link:  "/already_exist",
+							Alive: false,
 						},
 					},
 				},
 			},
 			want: []FoundLink{
 				{
-					Link:    "/already_exist",
-					Visited: true,
-					Alive:   false,
+					Link:  "/already_exist",
+					Alive: false,
 				},
 			},
 		},

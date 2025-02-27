@@ -16,36 +16,42 @@ func main() {
 	appData := data.InitialiseAppData(url)
 
 	response := makeRequest(url)
-	log.Printf("%v", response)
-	links := parsing.GetLinksFromResponse(response)
-	saveLinks(links, &appData)
+	saveResponseLinks(response, &appData)
 
 	index := 0
 
 	for index < len(appData.FoundLinks) {
-		if !appData.HasUncheckedLink() {
-			break
-		}
-
 		selectedLink := appData.FoundLinks[index].Link
+
 		if isInternal(selectedLink) {
 			response = makeRequest(selectedLink)
-			handleRequest(selectedLink, appData, response)
+			handleRequest(selectedLink, &appData, response)
 		}
 
 		index++
-
-		log.Print(appData)
 	}
 
 }
 
-func handleRequest(selectedLink string, appData data.AppData, response *http.Response) {
+func handleRequest(selectedLink string, appData *data.AppData, response *http.Response) {
 	if response.StatusCode >= 200 && response.StatusCode < 400 {
-		data.UpdateLink(selectedLink, &appData, true, true)
+		data.UpdateLink(selectedLink, appData, true, true)
 
+		saveResponseLinks(response, appData)
+
+		log.Printf("Link : %v | Status : %v ✅", selectedLink, response.Status)
+	} else {
+		log.Printf("Link : %v | Status : %v ❌", selectedLink, response.Status)
+	}
+}
+
+func saveResponseLinks(response *http.Response, appData *data.AppData) {
+	if isInternal(response.Request.URL.String()) {
 		links := parsing.GetLinksFromResponse(response)
-		saveLinks(links, &appData)
+
+		for _, link := range links {
+			data.AddLinkFound(link, appData)
+		}
 	}
 }
 
@@ -67,11 +73,5 @@ func makeRequest(link string) *http.Response {
 }
 
 func isInternal(link string) bool {
-	return strings.HasPrefix(link, "/")
-}
-
-func saveLinks(links []string, appData *data.AppData) {
-	for _, link := range links {
-		data.AddLinkFound(link, appData)
-	}
+	return strings.HasPrefix(link, "/") || strings.HasPrefix(link, url)
 }
