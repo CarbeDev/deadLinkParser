@@ -1,47 +1,21 @@
 package data
 
-type AppData struct {
-	InitialUrl string
-	FoundLinks []FoundLink
+import "sync"
+
+var ReadedLinks = make(map[string]bool)
+var mu sync.Mutex
+
+func LinkHasBeenRead(link string) bool {
+	mu.Lock()
+	defer mu.Unlock()
+
+	_, exists := ReadedLinks[link]
+	return exists
 }
 
-type FoundLink struct {
-	Link  string
-	Alive bool
-}
+func AddReadedLink(link string, accessible bool) {
+	mu.Lock()
+	defer mu.Unlock()
 
-func InitialiseAppData(baseUrl string) AppData {
-	//FIXME add link verification
-	return AppData{
-		InitialUrl: baseUrl,
-		FoundLinks: []FoundLink{},
-	}
-}
-
-func (data AppData) hasLink(link string) bool {
-	for _, foundLink := range data.FoundLinks {
-		if link == foundLink.Link {
-			return true
-		}
-	}
-
-	return false
-}
-
-func AddLinkFound(link string, appData *AppData) {
-	if !appData.hasLink(link) {
-		*appData = AppData{
-			InitialUrl: appData.InitialUrl,
-			FoundLinks: append(appData.FoundLinks, FoundLink{Link: link}),
-		}
-	}
-}
-
-func UpdateLink(link string, data *AppData, visited bool, alive bool) {
-	for index := range data.FoundLinks {
-		if link == data.FoundLinks[index].Link {
-			data.FoundLinks[index].Alive = alive
-		}
-
-	}
+	ReadedLinks[link] = accessible
 }
