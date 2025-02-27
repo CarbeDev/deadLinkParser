@@ -2,18 +2,17 @@ package parsing
 
 import (
 	"golang.org/x/net/html"
-	"log"
 	"net/http"
 )
 
-func GetLinksFromResponse(response *http.Response) []string {
+func GetLinksFromResponse(response *http.Response) ([]string, error) {
 	htmlPage, err := html.Parse(response.Body)
 
 	if err != nil {
-		log.Fatalf("Error while parsing html : %v", err)
+		return nil, err
 	}
 
-	return getLinksFromHtmlPage(htmlPage)
+	return getLinksFromHtmlPage(htmlPage), nil
 }
 
 func getLinksFromHtmlPage(htmlPage *html.Node) []string {

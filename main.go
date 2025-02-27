@@ -20,7 +20,11 @@ func main() {
 		log.Fatalf("Error while requesting : %v", err)
 	}
 
-	saveResponseLinks(response, &appData)
+	err = saveResponseLinks(response, &appData)
+
+	if err != nil {
+		log.Fatalf("Error while parsing html : %v", err)
+	}
 
 	index := 0
 
@@ -30,7 +34,7 @@ func main() {
 		response, err = makeRequest(selectedLink)
 
 		if err != nil {
-			log.Printf("Link : %v | Error : %v ❌", selectedLink, err)
+			errorLog(selectedLink, err)
 		} else {
 			handleResponse(selectedLink, &appData, response)
 		}
@@ -40,11 +44,19 @@ func main() {
 
 }
 
+func errorLog(selectedLink string, err error) {
+	log.Printf("Link : %v | Error : %v ❌", selectedLink, err)
+}
+
 func handleResponse(selectedLink string, appData *data.AppData, response *http.Response) {
 	if response.StatusCode >= 200 && response.StatusCode < 400 {
 		data.UpdateLink(selectedLink, appData, true, true)
 
-		saveResponseLinks(response, appData)
+		err := saveResponseLinks(response, appData)
+
+		if err != nil {
+			errorLog(selectedLink, err)
+		}
 
 		log.Printf("Link : %v | Status : %v ✅", selectedLink, response.Status)
 	} else {
@@ -52,14 +64,20 @@ func handleResponse(selectedLink string, appData *data.AppData, response *http.R
 	}
 }
 
-func saveResponseLinks(response *http.Response, appData *data.AppData) {
+func saveResponseLinks(response *http.Response, appData *data.AppData) error {
 	if isInternal(response.Request.URL.String()) {
-		links := parsing.GetLinksFromResponse(response)
+		links, err := parsing.GetLinksFromResponse(response)
+
+		if err != nil {
+			return err
+		}
 
 		for _, link := range links {
 			data.AddLinkFound(link, appData)
 		}
+
 	}
+	return nil
 }
 
 func makeRequest(link string) (*http.Response, error) {
