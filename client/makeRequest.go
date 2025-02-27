@@ -1,6 +1,8 @@
 package client
 
-import "net/http"
+import (
+	"net/http"
+)
 
 func InternalRequest(path string, baseUrl string) (*http.Response, error) {
 	if path == baseUrl {
@@ -9,11 +11,11 @@ func InternalRequest(path string, baseUrl string) (*http.Response, error) {
 
 	fullUrl := constructFullUrl(path, baseUrl)
 
-	return http.Get(fullUrl)
+	return HttpClient().Get(fullUrl)
 }
 
 func ExternalRequest(url string) (*http.Response, error) {
-	return http.Get(url)
+	return HttpClient().Get(url)
 }
 
 func constructFullUrl(path string, baseUrl string) string {

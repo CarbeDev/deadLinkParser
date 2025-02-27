@@ -15,7 +15,11 @@ func main() {
 	url = "https://scrape-me.dreamsofcode.io/"
 	appData := data.InitialiseAppData(url)
 
-	response := makeRequest(url)
+	response, err := makeRequest(url)
+	if err != nil {
+		log.Fatalf("Error while requesting : %v", err)
+	}
+
 	saveResponseLinks(response, &appData)
 
 	index := 0
@@ -23,9 +27,12 @@ func main() {
 	for index < len(appData.FoundLinks) {
 		selectedLink := appData.FoundLinks[index].Link
 
-		if isInternal(selectedLink) {
-			response = makeRequest(selectedLink)
-			handleRequest(selectedLink, &appData, response)
+		response, err = makeRequest(selectedLink)
+
+		if err != nil {
+			log.Printf("Link : %v | Error : %v ❌", selectedLink, err)
+		} else {
+			handleResponse(selectedLink, &appData, response)
 		}
 
 		index++
@@ -33,7 +40,7 @@ func main() {
 
 }
 
-func handleRequest(selectedLink string, appData *data.AppData, response *http.Response) {
+func handleResponse(selectedLink string, appData *data.AppData, response *http.Response) {
 	if response.StatusCode >= 200 && response.StatusCode < 400 {
 		data.UpdateLink(selectedLink, appData, true, true)
 
@@ -55,7 +62,7 @@ func saveResponseLinks(response *http.Response, appData *data.AppData) {
 	}
 }
 
-func makeRequest(link string) *http.Response {
+func makeRequest(link string) (*http.Response, error) {
 	var err error
 	var resp *http.Response
 
@@ -66,10 +73,10 @@ func makeRequest(link string) *http.Response {
 	}
 
 	if err != nil {
-		log.Fatalf("Error requesting url '%v' : %v", url, err)
+		return nil, err
 	}
 
-	return resp
+	return resp, nil
 }
 
 func isInternal(link string) bool {
