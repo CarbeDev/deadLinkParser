@@ -5,17 +5,15 @@ import "sync"
 var ReadedLinks = make(map[string]bool)
 var mu sync.Mutex
 
-func LinkHasBeenRead(link string) bool {
+func CheckAndAddLink(link string) bool {
 	mu.Lock()
 	defer mu.Unlock()
 
-	_, exists := ReadedLinks[link]
-	return exists
-}
+	if _, exists := ReadedLinks[link]; exists {
+		return false // Le lien existe déjà
+	}
 
-func AddReadedLink(link string, accessible bool) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	ReadedLinks[link] = accessible
+	// Le lien n'existe pas, on l'ajoute
+	ReadedLinks[link] = false
+	return true // Indique que nous avons ajouté le lien
 }

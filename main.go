@@ -11,7 +11,6 @@ import (
 )
 
 var url string
-var numberOfLinkFound = 0
 
 func main() {
 	url = "https://scrape-me.dreamsofcode.io/"
@@ -24,27 +23,26 @@ func main() {
 	linkCh := make(chan string, 100)
 	var wg sync.WaitGroup
 
-	go func() {
-		for link := range linkCh {
-			wg.Add(1)
-			go func(l string) {
-				defer wg.Done()
-				toto(l, linkCh)
-			}(link)
-		}
-	}()
-
 	err = saveResponseLinks(response, linkCh)
 
 	if err != nil {
 		log.Fatalf("Error while parsing html : %v", err)
 	}
 
+	for link := range linkCh {
+		wg.Add(1)
+		go func(l string) {
+			defer wg.Done()
+			handleLink(l, linkCh)
+		}(link)
+	}
+
 	wg.Wait()
 	close(linkCh)
 }
 
-func toto(currentLink string, linkCh chan string) {
+func handleLink(currentLink string, linkCh chan string) {
+	
 	response, err := makeRequest(currentLink)
 
 	if err != nil {
@@ -65,10 +63,8 @@ func handleResponse(selectedLink string, linkCh chan string, response *http.Resp
 			errorLog(selectedLink, err)
 		}
 
-		data.AddReadedLink(selectedLink, true)
 		log.Printf("Link : %v | Status : %v ✅", selectedLink, response.Status)
 	} else {
-		data.AddReadedLink(selectedLink, false)
 		log.Printf("Link : %v | Status : %v ❌", selectedLink, response.Status)
 	}
 }
@@ -82,7 +78,7 @@ func saveResponseLinks(response *http.Response, linkCh chan string) error {
 		}
 
 		for _, link := range links {
-			if !data.LinkHasBeenRead(link) {
+			if data.CheckAndAddLink(link) {
 				linkCh <- link
 			}
 		}
