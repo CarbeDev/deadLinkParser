@@ -2,4 +2,7 @@ module deadLinkParser
 
 go 1.24.0
 
-require golang.org/x/net v0.35.0 // indirect
+require (
+	github.com/urfave/cli/v3 v3.0.0-beta1 // indirect
+	golang.org/x/net v0.35.0 // indirect
+)
