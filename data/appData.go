@@ -10,10 +10,9 @@ func CheckAndAddLink(link string) bool {
 	defer mu.Unlock()
 
 	if _, exists := ReadedLinks[link]; exists {
-		return false // Le lien existe déjà
+		return false
 	}
 
-	// Le lien n'existe pas, on l'ajoute
 	ReadedLinks[link] = false
-	return true // Indique que nous avons ajouté le lien
+	return true
 }
