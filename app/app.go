@@ -3,7 +3,9 @@ package app
 import (
 	"deadLinkParser/app/client"
 	"deadLinkParser/app/data"
+	"deadLinkParser/app/logger"
 	"deadLinkParser/app/parsing"
+	"deadLinkParser/app/responseUtils"
 	"log"
 	"net/http"
 	"strings"
@@ -20,36 +22,29 @@ func FindAllLinks(url string) {
 	linkCh := make(chan string, 100)
 	var wg sync.WaitGroup
 
-	// Compteur de tâches actives
 	var activeTasksCount int32 = 0
 
-	// Goroutine de surveillance
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer close(linkCh) // Ferme le canal quand toutes les tâches sont terminées
+		defer close(linkCh)
 
 		for {
-			time.Sleep(100 * time.Millisecond) // Petite pause pour éviter une utilisation excessive du CPU
+			time.Sleep(100 * time.Millisecond)
 			if atomic.LoadInt32(&activeTasksCount) == 0 {
-				// Aucune tâche active, on peut terminer
 				break
 			}
 		}
 	}()
 
-	// Ajouter le premier lien
 	atomic.AddInt32(&activeTasksCount, 1)
 	linkCh <- url
 
-	// Traiter les liens
 	for link := range linkCh {
 		wg.Add(1)
 		go func(l string) {
 			defer wg.Done()
-			defer atomic.AddInt32(&activeTasksCount, -1) // Décrémenter le compteur quand la tâche est terminée
-
-			// Traiter le lien et ajouter de nouveaux liens au canal
+			defer atomic.AddInt32(&activeTasksCount, -1)
 			processLink(l, linkCh, &activeTasksCount)
 		}(link)
 	}
@@ -71,17 +66,15 @@ func errorLog(selectedLink string, err error) {
 }
 
 func handleResponse(selectedLink string, linkCh chan string, response *http.Response, numberOfActiveTask *int32) {
-	if response.StatusCode >= 200 && response.StatusCode < 400 {
+	if responseUtils.IsSuccess(response) {
 		err := saveResponseLinks(response, linkCh, numberOfActiveTask)
 
 		if err != nil {
 			errorLog(selectedLink, err)
 		}
-
-		log.Printf("Link : %v | Status : %v ✅", selectedLink, response.Status)
-	} else {
-		log.Printf("Link : %v | Status : %v ❌", selectedLink, response.Status)
 	}
+
+	logger.LogResponseResult(response)
 }
 
 func saveResponseLinks(response *http.Response, linkCh chan string, numberOfActiveTask *int32) error {
