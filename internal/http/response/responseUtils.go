@@ -1,4 +1,4 @@
-package responseUtils
+package response
 
 import "net/http"
 

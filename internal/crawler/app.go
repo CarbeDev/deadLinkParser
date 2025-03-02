@@ -1,11 +1,11 @@
-package app
+package crawler
 
 import (
-	"deadLinkParser/app/client"
-	"deadLinkParser/app/data"
-	"deadLinkParser/app/logger"
-	"deadLinkParser/app/parsing"
-	"deadLinkParser/app/responseUtils"
+	"deadLinkParser/internal/http/client"
+	responseUtils "deadLinkParser/internal/http/response"
+	"deadLinkParser/internal/logger"
+	parsing "deadLinkParser/internal/parser"
+	data "deadLinkParser/internal/storage"
 	"log"
 	"net/http"
 	"strings"
