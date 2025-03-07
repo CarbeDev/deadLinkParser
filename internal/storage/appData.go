@@ -1,18 +1,21 @@
 package storage
 
-import "sync"
+import (
+	"slices"
+	"sync"
+)
 
-var ReadedLinks = make(map[string]bool)
+var ReadedLinks []string
 var mu sync.Mutex
 
 func CheckAndAddLink(link string) bool {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if _, exists := ReadedLinks[link]; exists {
+	if slices.Contains(ReadedLinks, link) {
 		return false
 	}
 
-	ReadedLinks[link] = false
+	ReadedLinks = append(ReadedLinks, link)
 	return true
 }
