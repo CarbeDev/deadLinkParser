@@ -1,6 +1,7 @@
 package logger
 
 import (
+	responseUtils "deadLinkParser/internal/http/utils"
 	"fmt"
 	"net/http"
 )
@@ -10,13 +11,9 @@ func formatLinkStatusMessage(response *http.Response) string {
 }
 
 func resultEmoji(response *http.Response) rune {
-	if isError(response) {
-		return '❌'
+	if responseUtils.IsSuccess(response) {
+		return '✅'
 	}
 
-	return '✅'
-}
-
-func isError(response *http.Response) bool {
-	return response.StatusCode >= 400
+	return '❌'
 }

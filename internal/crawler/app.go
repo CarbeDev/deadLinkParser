@@ -2,7 +2,7 @@ package crawler
 
 import (
 	"deadLinkParser/internal/http/client"
-	responseUtils "deadLinkParser/internal/http/response"
+	responseUtils "deadLinkParser/internal/http/utils"
 	"deadLinkParser/internal/logger"
 	parsing "deadLinkParser/internal/parser"
 	data "deadLinkParser/internal/storage"
