@@ -1,13 +1,14 @@
 package storage
 
 import (
+	"slices"
 	"sync"
 	"testing"
 )
 
 func TestCheckAndAddLink(t *testing.T) {
 	// Reset the ReadedLinks map before testing
-	ReadedLinks = make(map[string]bool)
+	ReadedLinks = []string{}
 
 	tests := []struct {
 		name     string
@@ -43,7 +44,7 @@ func TestCheckAndAddLink(t *testing.T) {
 
 func TestConcurrentCheckAndAddLink(t *testing.T) {
 	// Reset the ReadedLinks map before testing
-	ReadedLinks = make(map[string]bool)
+	ReadedLinks = []string{}
 
 	const numGoroutines = 100
 	const link = "https://example.com"
@@ -74,7 +75,7 @@ func TestConcurrentCheckAndAddLink(t *testing.T) {
 	}
 
 	// Verify the link exists in the map
-	if _, exists := ReadedLinks[link]; !exists {
+	if !slices.Contains(ReadedLinks, link) {
 		t.Error("Link should exist in the map")
 	}
 }

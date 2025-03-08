@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"deadLinkParser/internal/crawler"
+	"deadLinkParser/internal/http/client"
 	"log"
 	"os"
 
@@ -14,6 +15,8 @@ func main() {
 		Name:  "deadLinkParser",
 		Usage: "call all links in your website",
 		Action: func(ctx context.Context, command *cli.Command) error {
+			httpClient := client.NewRealHTTPClient()
+			crawler := crawler.NewCrawler(httpClient)
 			crawler.FindAllLinks(command.Args().Get(0))
 			return nil
 		},

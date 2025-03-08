@@ -1,7 +1,6 @@
 package crawler
 
 import (
-	"deadLinkParser/internal/http/client"
 	responseUtils "deadLinkParser/internal/http/utils"
 	"deadLinkParser/internal/logger"
 	parsing "deadLinkParser/internal/parser"
@@ -14,11 +13,25 @@ import (
 	"time"
 )
 
-var baseUrl string
+// HTTPClient interface for making HTTP requests
+type HTTPClient interface {
+	InternalRequest(link, baseURL string) (*http.Response, error)
+	ExternalRequest(link string) (*http.Response, error)
+}
 
-func FindAllLinks(url string) {
+type Crawler struct {
+	httpClient HTTPClient
+	baseUrl    string
+}
 
-	baseUrl = url
+func NewCrawler(httpClient HTTPClient) *Crawler {
+	return &Crawler{
+		httpClient: httpClient,
+	}
+}
+
+func (c *Crawler) FindAllLinks(url string) {
+	c.baseUrl = url
 	linkCh := make(chan string, 100)
 	var wg sync.WaitGroup
 
@@ -45,29 +58,30 @@ func FindAllLinks(url string) {
 		go func(l string) {
 			defer wg.Done()
 			defer atomic.AddInt32(&activeTasksCount, -1)
-			processLink(l, linkCh, &activeTasksCount)
+			c.processLink(l, linkCh, &activeTasksCount)
 		}(link)
 	}
 
 	wg.Wait()
 }
-func processLink(currentLink string, linkCh chan string, numberOfActiveTask *int32) {
 
-	response, err := makeRequest(currentLink)
+func (c *Crawler) processLink(currentLink string, linkCh chan string, numberOfActiveTask *int32) {
+	response, err := c.makeRequest(currentLink)
 
 	if err != nil {
 		errorLog(currentLink, err)
 	} else {
-		handleResponse(currentLink, linkCh, response, numberOfActiveTask)
+		c.handleResponse(currentLink, linkCh, response, numberOfActiveTask)
 	}
 }
+
 func errorLog(selectedLink string, err error) {
 	log.Printf("Link : %v | Error : %v ❌", selectedLink, err)
 }
 
-func handleResponse(selectedLink string, linkCh chan string, response *http.Response, numberOfActiveTask *int32) {
+func (c *Crawler) handleResponse(selectedLink string, linkCh chan string, response *http.Response, numberOfActiveTask *int32) {
 	if responseUtils.IsSuccess(response) {
-		err := saveResponseLinks(response, linkCh, numberOfActiveTask)
+		err := c.saveResponseLinks(response, linkCh, numberOfActiveTask)
 
 		if err != nil {
 			errorLog(selectedLink, err)
@@ -77,8 +91,8 @@ func handleResponse(selectedLink string, linkCh chan string, response *http.Resp
 	logger.LogResponseResult(response)
 }
 
-func saveResponseLinks(response *http.Response, linkCh chan string, numberOfActiveTask *int32) error {
-	if isInternal(response.Request.URL.String()) {
+func (c *Crawler) saveResponseLinks(response *http.Response, linkCh chan string, numberOfActiveTask *int32) error {
+	if c.isInternal(response.Request.URL.String()) {
 		links, err := parsing.GetLinksFromResponse(response)
 
 		if err != nil {
@@ -91,19 +105,18 @@ func saveResponseLinks(response *http.Response, linkCh chan string, numberOfActi
 				linkCh <- link
 			}
 		}
-
 	}
 	return nil
 }
 
-func makeRequest(link string) (*http.Response, error) {
+func (c *Crawler) makeRequest(link string) (*http.Response, error) {
 	var err error
 	var resp *http.Response
 
-	if isInternal(link) {
-		resp, err = client.InternalRequest(link, baseUrl)
+	if c.isInternal(link) {
+		resp, err = c.httpClient.InternalRequest(link, c.baseUrl)
 	} else {
-		resp, err = client.ExternalRequest(link)
+		resp, err = c.httpClient.ExternalRequest(link)
 	}
 
 	if err != nil {
@@ -113,6 +126,6 @@ func makeRequest(link string) (*http.Response, error) {
 	return resp, nil
 }
 
-func isInternal(link string) bool {
-	return strings.HasPrefix(link, "/") || strings.HasPrefix(link, baseUrl)
+func (c *Crawler) isInternal(link string) bool {
+	return strings.HasPrefix(link, "/") || strings.HasPrefix(link, c.baseUrl)
 }
