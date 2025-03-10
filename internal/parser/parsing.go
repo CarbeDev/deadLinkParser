@@ -1,8 +1,9 @@
-package parsing
+package parser
 
 import (
-	"golang.org/x/net/html"
 	"net/http"
+
+	"golang.org/x/net/html"
 )
 
 func GetLinksFromResponse(response *http.Response) ([]string, error) {

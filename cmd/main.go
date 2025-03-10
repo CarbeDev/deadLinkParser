@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
-	"deadLinkParser/app"
-	"github.com/urfave/cli/v3"
+	"deadLinkParser/internal/crawler"
+	"deadLinkParser/internal/http/client"
 	"log"
 	"os"
+
+	"github.com/urfave/cli/v3"
 )
 
 func main() {
@@ -13,7 +15,9 @@ func main() {
 		Name:  "deadLinkParser",
 		Usage: "call all links in your website",
 		Action: func(ctx context.Context, command *cli.Command) error {
-			app.FindAllLinks(command.Args().Get(0))
+			httpClient := client.NewRealHTTPClient()
+			crawler := crawler.NewCrawler(httpClient)
+			crawler.FindAllLinks(command.Args().Get(0))
 			return nil
 		},
 	}
